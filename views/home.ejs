@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - Okta Custom Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+    }
+    .navbar {
+      background-color: #00297A;
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .navbar-brand {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .navbar-menu {
+      display: flex;
+      gap: 20px;
+    }
+    .navbar-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .navbar-menu a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .welcome-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      margin-bottom: 40px;
+    }
+    .welcome-card h1 {
+      color: #00297A;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .welcome-card p {
+      color: #6c757d;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .user-info {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+    }
+    .user-info h2 {
+      color: #00297A;
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+    .info-item {
+      margin-bottom: 15px;
+      display: flex;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #495057;
+      width: 150px;
+      flex-shrink: 0;
+    }
+    .info-value {
+      color: #6c757d;
+      flex-grow: 1;
+    }
+    .logout-form {
+      margin-top: 20px;
+    }
+    .logout-button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .logout-button:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="navbar-brand">Okta Demo App</div>
+    <div class="navbar-menu">
+      <a href="/">Home</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="welcome-card">
+      <h1>Welcome to the Okta Demo App!</h1>
+      <p>You have successfully logged in with Okta authentication. This demo application showcases a custom login experience with Okta, including multi-factor authentication.</p>
+      <p>Your session is secure and protected with MFA.</p>
+    </div>
+    
+    <div class="user-info">
+      <h2>Your Session Information</h2>
+      
+      <div class="info-item">
+        <div class="info-label">Email:</div>
+        <div class="info-value"><%= user?.email || 'Not available' %></div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Authenticated At:</div>
+        <div class="info-value"><%= user?.authenticatedAt || 'Not available' %></div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">MFA Verified:</div>
+        <div class="info-value"><%= user?.mfaVerified ? 'Yes' : 'No' %></div>
+      </div>
+      
+      <div class="info-item">
+        <div class="info-label">Session ID:</div>
+        <div class="info-value"><%= user?.sessionId || 'Not available' %></div>
+      </div>
+      
+      <form action="/logout" method="GET" class="logout-form">
+        <button type="submit" class="logout-button">Logout</button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

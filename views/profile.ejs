@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile - Okta Custom Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+    }
+    .navbar {
+      background-color: #00297A;
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .navbar-brand {
+      font-size: 24px;
+      font-weight: 600;
+    }
+    .navbar-menu {
+      display: flex;
+      gap: 20px;
+    }
+    .navbar-menu a {
+      color: white;
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .navbar-menu a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+    .profile-header {
+      margin-bottom: 30px;
+    }
+    .profile-header h1 {
+      color: #00297A;
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+    .profile-header p {
+      color: #6c757d;
+      margin: 0;
+    }
+    .profile-card {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      margin-bottom: 30px;
+    }
+    .profile-section {
+      margin-bottom: 30px;
+    }
+    .profile-section:last-child {
+      margin-bottom: 0;
+    }
+    .profile-section h2 {
+      color: #00297A;
+      margin-top: 0;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #e9ecef;
+    }
+    .profile-item {
+      margin-bottom: 15px;
+      display: flex;
+    }
+    .profile-label {
+      font-weight: 600;
+      color: #495057;
+      width: 150px;
+      flex-shrink: 0;
+    }
+    .profile-value {
+      color: #6c757d;
+      flex-grow: 1;
+    }
+    .security-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      background-color: #28a745;
+      color: white;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .token-info {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #495057;
+      overflow-x: auto;
+    }
+    .logout-form {
+      margin-top: 20px;
+    }
+    .logout-button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+    .logout-button:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="navbar-brand">Okta Demo App</div>
+    <div class="navbar-menu">
+      <a href="/">Home</a>
+      <a href="/dashboard">Dashboard</a>
+      <a href="/profile">Profile</a>
+    </div>
+  </div>
+  
+  <div class="container">
+    <div class="profile-header">
+      <h1>User Profile</h1>
+      <p>View and manage your account information</p>
+    </div>
+    
+    <div class="profile-card">
+      <div class="profile-section">
+        <h2>Account Information</h2>
+        
+        <div class="profile-item">
+          <div class="profile-label">Email:</div>
+          <div class="profile-value"><%= user?.email || 'Not available' %></div>
+        </div>
+        
+        <div class="profile-item">
+          <div class="profile-label">Account Status:</div>
+          <div class="profile-value">
+            <span class="security-badge">Active</span>
+          </div>
+        </div>
+        
+        <div class="profile-item">
+          <div class="profile-label">Last Login:</div>
+          <div class="profile-value"><%= new Date(user?.authenticatedAt || Date.now()).toLocaleString() %></div>
+        </div>
+      </div>
+      
+      <div class="profile-section">
+        <h2>Security Settings</h2>
+        
+        <div class="profile-item">
+          <div class="profile-label">MFA Status:</div>
+          <div class="profile-value">
+            <% if (user?.mfaVerified) { %>
+              <span class="security-badge">Enabled</span>
+            <% } else { %>
+              Not enabled
+            <% } %>
+          </div>
+        </div>
+        
+        <div class="profile-item">
+          <div class="profile-label">MFA Method:</div>
+          <div class="profile-value">Okta Verify (TOTP)</div>
+        </div>
+      </div>
+      
+      <% if (tokens) { %>
+        <div class="profile-section">
+          <h2>Session Information</h2>
+          
+          <div class="profile-item">
+            <div class="profile-label">Token Type:</div>
+            <div class="profile-value"><%= tokens.tokenType || 'Not available' %></div>
+          </div>
+          
+          <div class="profile-item">
+            <div class="profile-label">Expires In:</div>
+            <div class="profile-value"><%= tokens.expiresIn ? `${tokens.expiresIn} seconds` : 'Not available' %></div>
+          </div>
+          
+          <div class="profile-item">
+            <div class="profile-label">Scopes:</div>
+            <div class="profile-value"><%= tokens.scopes ? tokens.scopes.join(', ') : 'Not available' %></div>
+          </div>
+          
+          <div class="profile-item">
+            <div class="profile-label">ID Token:</div>
+            <div class="profile-value">
+              <div class="token-info">
+                <%= tokens.idToken ? `${tokens.idToken.substring(0, 20)}...` : 'Not available' %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+    
+    <form action="/logout" method="GET" class="logout-form">
+      <button type="submit" class="logout-button">Logout</button>
+    </form>
+  </div>
+</body>
+</html>

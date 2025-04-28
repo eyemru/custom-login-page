@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan QR Code - Okta Custom Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .qr-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 500px;
+      max-width: 90%;
+      text-align: center;
+    }
+    .header {
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #00297A;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .header p {
+      color: #6c757d;
+      margin: 0;
+    }
+    .qr-code {
+      margin: 30px 0;
+      padding: 20px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .qr-code img {
+      max-width: 100%;
+      height: auto;
+    }
+    .instructions {
+      margin-bottom: 30px;
+      text-align: left;
+    }
+    .instructions h2 {
+      font-size: 18px;
+      color: #495057;
+      margin-bottom: 10px;
+    }
+    .instructions ol {
+      color: #6c757d;
+      line-height: 1.5;
+      padding-left: 20px;
+    }
+    .instructions li {
+      margin-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #495057;
+      text-align: left;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+      letter-spacing: 4px;
+      text-align: center;
+      transition: border-color 0.15s ease-in-out;
+    }
+    input[type="text"]:focus {
+      border-color: #007bff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    button {
+      background-color: #00297A;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.15s ease-in-out;
+    }
+    button:hover {
+      background-color: #001d5a;
+    }
+    .error-message {
+      color: #dc3545;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f8d7da;
+      border-radius: 4px;
+      display: <%= error ? 'block' : 'none' %>;
+    }
+    .manual-code {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 18px;
+      letter-spacing: 2px;
+      color: #495057;
+    }
+  </style>
+</head>
+<body>
+  <div class="qr-container">
+    <div class="header">
+      <h1>Scan QR Code</h1>
+      <p>Use the Okta Verify app to scan this QR code</p>
+    </div>
+    
+    <div class="error-message" id="error-message">
+      <%= error || '' %>
+    </div>
+    
+    <% if (
+      transaction &&
+      transaction.nextStep &&
+      (
+        (transaction.nextStep.name === 'enroll-authenticator' && transaction.nextStep.authenticator) ||
+        (transaction.nextStep.name === 'enroll-poll' && transaction.nextStep.authenticator && transaction.nextStep.authenticator.contextualData && transaction.nextStep.authenticator.contextualData.qrcode)
+      )
+    ) { %>
+      <% let qrCode, activationLink; %>
+      <% if (transaction.nextStep.name === 'enroll-authenticator') { %>
+        <% qrCode = transaction.nextStep.authenticator.value && transaction.nextStep.authenticator.value.contextualData && transaction.nextStep.authenticator.value.contextualData.qrcode; %>
+        <% activationLink = transaction.nextStep.authenticator.value && transaction.nextStep.authenticator.value.contextualData && transaction.nextStep.authenticator.value.contextualData.activationData; %>
+      <% } else if (transaction.nextStep.name === 'enroll-poll') { %>
+        <% qrCode = transaction.nextStep.authenticator.contextualData.qrcode; %>
+        <% activationLink = transaction.nextStep.authenticator.contextualData.activationData; %>
+      <% } %>
+      <% if (qrCode) { %>
+        <div class="qr-code">
+          <img src="<%= qrCode.href.startsWith('data:') ? qrCode.href : 'data:image/png;base64,' + qrCode.href %>" alt="QR Code">
+        </div>
+        <div class="instructions">
+          <h2>Instructions:</h2>
+          <ol>
+            <li>Open the Okta Verify app on your mobile device</li>
+            <li>Tap "Add Account"</li>
+            <li>Scan the QR code above</li>
+            <li>Once added, enter the 6-digit code from the app below</li>
+          </ol>
+        </div>
+        <% if (activationLink) { %>
+          <p>Can't scan the QR code? Use this activation code instead:</p>
+          <div class="manual-code"><%= activationLink %></div>
+        <% } %>
+        <form action="/verify-mfa" method="POST">
+          <div class="form-group">
+            <label for="code">Enter the 6-digit code from Okta Verify:</label>
+            <input type="text" id="code" name="code" maxlength="6" required autofocus>
+          </div>
+          <button type="submit">Verify</button>
+        </form>
+      <% } else { %>
+        <p>Unable to generate QR code. Please try again or contact support.</p>
+      <% } %>
+    <% } else { %>
+      <p>Invalid enrollment state. Please restart the enrollment process.</p>
+      <a href="/login">Return to Login</a>
+    <% } %>
+  </div>
+  
+  <script>
+    // Format code input
+    document.getElementById('code')?.addEventListener('input', function(e) {
+      // Remove non-digits
+      this.value = this.value.replace(/\D/g, '');
+      
+      // Limit to 6 digits
+      if (this.value.length > 6) {
+        this.value = this.value.slice(0, 6);
+      }
+    });
+  </script>
+</body>
+</html>
