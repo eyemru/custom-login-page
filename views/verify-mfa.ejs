@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFA Verification - Okta Custom Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .verification-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 400px;
+      max-width: 90%;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #00297A;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .header p {
+      color: #6c757d;
+      margin: 0;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #495057;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+      letter-spacing: 4px;
+      text-align: center;
+      transition: border-color 0.15s ease-in-out;
+    }
+    input[type="text"]:focus {
+      border-color: #007bff;
+      outline: 0;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    button {
+      background-color: #00297A;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.15s ease-in-out;
+    }
+    button:hover {
+      background-color: #001d5a;
+    }
+    button:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+    .error-message {
+      color: #dc3545;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f8d7da;
+      border-radius: 4px;
+      display: <%= error ? 'block' : 'none' %>;
+    }
+    .loading {
+      display: none;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border-left-color: #00297A;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="verification-container">
+    <div class="header">
+      <h1>Verification Required</h1>
+      <p>Enter the code from your Okta Verify app</p>
+    </div>
+    
+    <div class="error-message" id="error-message">
+      <%= error || '' %>
+    </div>
+    
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Verifying code...</p>
+    </div>
+    
+    <form id="verification-form" onsubmit="return submitForm()">
+      <div class="form-group">
+        <label for="code">Verification Code</label>
+        <input type="text" id="code" name="code" maxlength="6" required autofocus>
+      </div>
+      
+      <button type="submit" id="submit-button">Verify</button>
+    </form>
+  </div>
+  
+  <script>
+    function submitForm() {
+      const code = document.getElementById('code').value.trim();
+      const submitButton = document.getElementById('submit-button');
+      const loadingElement = document.getElementById('loading');
+      const errorElement = document.getElementById('error-message');
+      
+      // Validate code format
+      if (!/^\d{6}$/.test(code)) {
+        errorElement.textContent = 'Please enter a valid 6-digit code';
+        errorElement.style.display = 'block';
+        return false;
+      }
+      
+      // Show loading state
+      submitButton.disabled = true;
+      loadingElement.style.display = 'block';
+      errorElement.style.display = 'none';
+      
+      // Create form data
+      const formData = new FormData();
+      formData.append('code', code);
+      
+      // Log the code for debugging
+      console.log('Submitting code:', code);
+      
+      // Send the verification request
+      fetch('/verify-mfa', {
+        method: 'POST',
+        body: formData,
+        redirect: 'follow'
+      })
+      .then(response => {
+        // If redirected, follow the redirect
+        if (response.redirected) {
+          window.location.href = response.url;
+          return Promise.resolve();
+        }
+        
+        // Otherwise, parse the response
+        return response.text().then(text => {
+          try {
+            return text ? JSON.parse(text) : {};
+          } catch (e) {
+            // If not JSON, it's probably HTML
+            document.open();
+            document.write(text);
+            document.close();
+            return Promise.resolve();
+          }
+        });
+      })
+      .then(data => {
+        // Skip if we already handled the response
+        if (!data) return;
+        
+        // Show error if present
+        if (data.error) {
+          errorElement.textContent = data.error;
+          errorElement.style.display = 'block';
+        }
+        
+        // Reset UI state
+        submitButton.disabled = false;
+        loadingElement.style.display = 'none';
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        
+        // Show error
+        errorElement.textContent = 'An error occurred. Please try again.';
+        errorElement.style.display = 'block';
+        
+        // Reset UI state
+        submitButton.disabled = false;
+        loadingElement.style.display = 'none';
+      });
+      
+      // Prevent form submission
+      return false;
+    }
+    
+    // Format code input
+    document.getElementById('code').addEventListener('input', function(e) {
+      // Remove non-digits
+      this.value = this.value.replace(/\D/g, '');
+      
+      // Limit to 6 digits
+      if (this.value.length > 6) {
+        this.value = this.value.slice(0, 6);
+      }
+    });
+  </script>
+</body>
+</html>

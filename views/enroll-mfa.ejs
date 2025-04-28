@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFA Enrollment - Okta Custom Login</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f7f9fc;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .enrollment-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      width: 500px;
+      max-width: 90%;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #00297A;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    .header p {
+      color: #6c757d;
+      margin: 0;
+    }
+    .info-section {
+      margin-bottom: 30px;
+    }
+    .info-section h2 {
+      font-size: 18px;
+      color: #495057;
+      margin-bottom: 10px;
+    }
+    .info-section p {
+      color: #6c757d;
+      line-height: 1.5;
+    }
+    .steps {
+      margin-bottom: 30px;
+    }
+    .step {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .step-number {
+      background-color: #00297A;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 15px;
+      flex-shrink: 0;
+    }
+    .step-content {
+      flex-grow: 1;
+    }
+    .step-title {
+      font-weight: 500;
+      color: #495057;
+      margin-bottom: 5px;
+    }
+    .step-description {
+      color: #6c757d;
+      font-size: 14px;
+    }
+    button {
+      background-color: #00297A;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      width: 100%;
+      transition: background-color 0.15s ease-in-out;
+    }
+    button:hover {
+      background-color: #001d5a;
+    }
+    .error-message {
+      color: #dc3545;
+      margin-bottom: 20px;
+      padding: 10px;
+      background-color: #f8d7da;
+      border-radius: 4px;
+      display: <%= error ? 'block' : 'none' %>;
+    }
+  </style>
+</head>
+<body>
+  <div class="enrollment-container">
+    <div class="header">
+      <h1>Set Up MFA</h1>
+      <p>Enhance your account security with multi-factor authentication</p>
+    </div>
+    
+    <div class="error-message" id="error-message">
+      <%= error || '' %>
+    </div>
+    
+    <div class="info-section">
+      <h2>Why MFA?</h2>
+      <p>Multi-factor authentication adds an extra layer of security to your account. Even if someone knows your password, they won't be able to access your account without the verification code from your authenticator app.</p>
+    </div>
+    
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <div class="step-title">Download Okta Verify</div>
+          <div class="step-description">Download the Okta Verify app from the App Store or Google Play Store.</div>
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <div class="step-title">Scan QR Code</div>
+          <div class="step-description">After clicking "Continue" below, you'll see a QR code. Scan it with the Okta Verify app.</div>
+        </div>
+      </div>
+      
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <div class="step-title">Enter Verification Code</div>
+          <div class="step-description">Enter the 6-digit code from the Okta Verify app to complete the setup.</div>
+        </div>
+      </div>
+    </div>
+    
+    <form action="/enroll-mfa" method="POST">
+      <button type="submit">Continue</button>
+    </form>
+  </div>
+</body>
+</html>
